@@ -1,30 +1,35 @@
 import gql from 'graphql-tag'
-import Link from 'next/link'
 import { useQuery } from '@apollo/client'
 import { initializeApollo } from '../apollo/client'
 
-const ViewerQuery = gql`
-  query ViewerQuery {
-    viewer {
-      id
-      name
-      status
+const TodoQuery = gql`
+query Message {
+	todos{
+    data{
+      attributes{
+        title
+        content
+      }
     }
   }
+}
 `
 
 const Index = () => {
   const {
-    data: { viewer },
-  } = useQuery(ViewerQuery)
-
+    data: { todos },
+  } = useQuery(TodoQuery)
+  let todoData = todos.data
+  todoData = todoData.map(data => ({ ...data.attributes }))
   return (
     <div>
-      You're signed in as {viewer.name} and you're {viewer.status} goto{' '}
-      <Link href="/about">
-        <a>static</a>
-      </Link>{' '}
-      page.
+      {
+        todoData.map((todo, index) => <div key={index}>
+          <div>{todo.title}</div>
+          <div>{todo.content}</div>
+        </div>)
+      }
+
     </div>
   )
 }
@@ -33,7 +38,7 @@ export async function getStaticProps() {
   const apolloClient = initializeApollo()
 
   await apolloClient.query({
-    query: ViewerQuery,
+    query: TodoQuery,
   })
 
   return {
