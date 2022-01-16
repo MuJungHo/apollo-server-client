@@ -1,8 +1,19 @@
 import gql from 'graphql-tag'
+import React, { Fragment } from 'react'
 import { useQuery, useMutation } from '@apollo/client'
 import { initializeApollo } from '../apollo/client'
 import Todo from '../component/Todo'
-import { Button } from '@material-ui/core';
+import { Button, Input, Paper, Typography } from '@material-ui/core';
+const styles = {
+  Paper: {
+    padding: 20,
+    margin: "auto",
+    textAlign: "center",
+    width: 700,
+    background: '#2d2d2d'
+  }
+};
+
 const GET_TODOS = gql`
 query Message {
 	todos{
@@ -32,35 +43,62 @@ const Index = () => {
   const {
     data: { todos },
   } = useQuery(GET_TODOS)
-  const [addTodo, { data, loading, error }] = useMutation(CREATE_TODO, {
+  const [addTodo, { }] = useMutation(CREATE_TODO, {
     refetchQueries: [
       GET_TODOS
     ]
   });
-  let input;
   let todo_ = todos.data
+  const inputRef = React.useRef();
 
   todo_ = todo_.map(data => ({ id: data.id, ...data.attributes }))
+  const handleCreateTodo = e => {
+    e.preventDefault();
+    if (inputRef.current.value.trim().length === 0) return
+    addTodo({ variables: { content: inputRef.current.value } });
+    inputRef.current.value = '';
+  }
   return (
-    <div>
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          addTodo({ variables: { content: input.value } });
-          input.value = '';
-        }}
-      >
-        <input
-          ref={node => {
-            input = node;
-          }}
-        />
-        <button type="submit">Add Todo</button>
-      </form>
-      {
-        todo_.map((todo, index) => <Todo key={index} todo={todo} />)
-      }
-    </div>
+    <Fragment>
+      <style jsx global>{`
+        body {
+          margin: 0px;
+        }
+      `}</style>
+      <div style={{
+        height: '100vh',
+        paddingTop: 20,
+        boxSizing: 'border-box',
+        background: '#262626'
+      }}>
+        <Paper style={styles.Paper}>
+          <Typography variant="h4" style={{ color: '#61dafb', textAlign: 'left' }}>To Do List</Typography>
+          <div style={{ background: '#fff', padding: 10, borderRadius: 5, marginTop: 20 }}>
+            {
+              todo_.map((todo, index) => <Todo key={todo.id} todo={todo} />)
+            }
+            <form
+              style={{ display: 'flex', }}
+              onSubmit={handleCreateTodo}
+            >
+              <Input
+                style={{ flex: 1 }}
+                placeholder="Add a new to do"
+                inputRef={inputRef}
+              />
+              <Button
+                style={{ marginLeft: 20 }}
+                type="submit"
+                variant="contained"
+                color="primary"
+              >
+                Add
+              </Button>
+            </form>
+          </div>
+        </Paper>
+      </div >
+    </Fragment >
   )
 }
 
