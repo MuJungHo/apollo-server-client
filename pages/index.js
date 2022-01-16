@@ -7,9 +7,10 @@ const TodoList = gql`
 query Message {
 	todos{
     data{
+      id
       attributes{
-        title
         content
+        finish
       }
     }
   }
@@ -32,7 +33,7 @@ const Index = () => {
     data: { todos },
   } = useQuery(TodoList)
   let todoData = todos.data
-  todoData = todoData.map(data => ({ ...data.attributes }))
+  todoData = todoData.map(data => ({ id: data.id, ...data.attributes }))
   const [addTodo, { data, loading, error }] = useMutation(CREATE_TODO);
   let input;
 
@@ -53,7 +54,7 @@ const Index = () => {
         <button type="submit">Add Todo</button>
       </form>
       {
-        todoData.map((todo, index) => <Todo key={index} todo={todo}/>)
+        todoData.map((todo, index) => <Todo key={index} todo={todo} />)
       }
     </div>
   )
