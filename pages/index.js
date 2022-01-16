@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@apollo/client'
 import { initializeApollo } from '../apollo/client'
 import Todo from '../component/Todo'
 import { Button } from '@material-ui/core';
-const TodoList = gql`
+const GET_TODOS = gql`
 query Message {
 	todos{
     data{
@@ -17,12 +17,12 @@ query Message {
 }
 `
 const CREATE_TODO = gql`
-mutation CreateTodo($title: String!, $content: String!) {
-  createTodosuid(data: {title: $title, content: $content, publishedAt: "2019-09-01T15:04:12.627Z"}) {
+mutation CreateTodo($content: String!) {
+  createTodosuid(data: {content: $content,finish: false, publishedAt: "2019-09-01T15:04:12.627Z"}) {
     data{
       attributes{
-        title
         content
+        finish
       }
     }
   }
@@ -31,18 +31,22 @@ mutation CreateTodo($title: String!, $content: String!) {
 const Index = () => {
   const {
     data: { todos },
-  } = useQuery(TodoList)
-  let todoData = todos.data
-  todoData = todoData.map(data => ({ id: data.id, ...data.attributes }))
-  const [addTodo, { data, loading, error }] = useMutation(CREATE_TODO);
+  } = useQuery(GET_TODOS)
+  const [addTodo, { data, loading, error }] = useMutation(CREATE_TODO, {
+    refetchQueries: [
+      GET_TODOS
+    ]
+  });
   let input;
+  let todo_ = todos.data
 
+  todo_ = todo_.map(data => ({ id: data.id, ...data.attributes }))
   return (
     <div>
       <form
         onSubmit={e => {
           e.preventDefault();
-          addTodo({ variables: { title: input.value, content: input.value } });
+          addTodo({ variables: { content: input.value } });
           input.value = '';
         }}
       >
@@ -54,7 +58,7 @@ const Index = () => {
         <button type="submit">Add Todo</button>
       </form>
       {
-        todoData.map((todo, index) => <Todo key={index} todo={todo} />)
+        todo_.map((todo, index) => <Todo key={index} todo={todo} />)
       }
     </div>
   )
@@ -64,7 +68,7 @@ export async function getStaticProps() {
   const apolloClient = initializeApollo()
 
   await apolloClient.query({
-    query: TodoList,
+    query: GET_TODOS,
   })
 
   return {
